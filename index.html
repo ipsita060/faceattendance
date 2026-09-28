@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionAttend AI - Smart Face Recognition Attendance System</title>
+  <meta name="description" content="AI-powered real-time facial recognition attendance system with live camera detection, instant logging, analytics, and personnel management.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 3H5a2 2 0 0 0-2 2v2"></path>
+            <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+            <path d="M3 17v2a2 2 0 0 0 2 2h2"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+            <path d="M7 20c0-2.5 2.5-4 5-4s5 1.5 5 4"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">VisionAttend <span class="gradient-text">AI</span></h1>
+          <p class="brand-subtitle">Smart Face Recognition Attendance System</p>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="live-clock-card">
+          <span class="live-pulse"></span>
+          <span id="liveClock">--:--:--</span>
+          <span class="live-date" id="liveDate">Loading date...</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-chip ready" id="systemStatusChip">
+          <span class="status-dot"></span>
+          <span id="systemStatusText">AI Model Ready</span>
+        </div>
+        <button class="btn btn-primary" id="openRegisterModalBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Register Member
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI Stats Cards -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Registered Personnel</span>
+          <h3 class="stat-value" id="statRegisteredCount">4</h3>
+          <span class="stat-desc">Ipsita, Kanishka, Senna, Tanvi</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Present Today</span>
+          <h3 class="stat-value text-green" id="statPresentCount">0</h3>
+          <span class="stat-desc" id="statPresentPct">0% of registered</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Last Attendance</span>
+          <h3 class="stat-value" id="statLastTime">--:--</h3>
+          <span class="stat-desc" id="statLastName">No scan yet today</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon amber">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Engine Latency</span>
+          <h3 class="stat-value" id="statFps">~25 FPS</h3>
+          <span class="stat-desc">Sub-40ms Client-Side Inference</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <main class="main-dashboard-grid">
+      <!-- Camera & Recognition Section -->
+      <section class="card camera-section">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="status-indicator active"></div>
+            <div>
+              <h2 class="card-title">Live Vision Scanner</h2>
+              <p class="card-subtitle">Real-time biometric facial recognition and verification</p>
+            </div>
+          </div>
+          <div class="card-header-badges">
+            <span class="badge" id="cameraStatusBadge">Webcam Standby</span>
+          </div>
+        </div>
+
+        <div class="viewfinder-container" id="viewfinder">
+          <video id="webcamVideo" autoplay muted playsinline></video>
+          <canvas id="overlayCanvas"></canvas>
+
+          <!-- Scanning HUD Frame -->
+          <div class="hud-bracket hud-tl"></div>
+          <div class="hud-bracket hud-tr"></div>
+          <div class="hud-bracket hud-bl"></div>
+          <div class="hud-bracket hud-br"></div>
+          <div class="scan-laser" id="scanLaser"></div>
+
+          <!-- Standby / Placeholder overlay when camera is paused -->
+          <div class="camera-placeholder" id="cameraPlaceholder">
+            <div class="placeholder-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </div>
+            <h3>Camera is Currently Off</h3>
+            <p>Click "Start Camera" below to initiate real-time biometric scanning, or test by uploading an image.</p>
+            <div class="placeholder-buttons">
+              <button class="btn btn-primary" id="startCameraBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Start Camera
+              </button>
+              <label class="btn btn-secondary upload-label">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload Test Photo
+                <input type="file" id="testPhotoInput" accept="image/*" style="display:none;">
+              </label>
+            </div>
+          </div>
+
+          <!-- Live Detection Alert Overlay -->
+          <div class="detection-alert" id="detectionAlert">
+            <div class="detection-avatar" id="alertAvatar">👤</div>
+            <div class="detection-text">
+              <h4 id="alertName">Face Detected</h4>
+              <p id="alertSub">Matching personnel credentials...</p>
+            </div>
+            <div class="detection-badge" id="alertBadge">Present</div>
+          </div>
+        </div>
+
+        <!-- Camera Controls Toolbar -->
+        <div class="camera-toolbar">
+          <div class="toolbar-left">
+            <button class="btn btn-sm btn-outline" id="toggleCamBtn" title="Toggle Camera On/Off">
+              <span id="toggleCamIcon">▶</span> <span id="toggleCamText">Start Camera</span>
+            </button>
+            <button class="btn btn-sm btn-outline" id="switchCamBtn" title="Switch Front/Back Camera">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 16v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"></path>
+                <path d="M4 8V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"></path>
+                <path d="M16 4l4 4-4 4"></path>
+                <path d="M8 20l-4-4 4-4"></path>
+              </svg>
+              Switch Lens
+            </button>
+            <button class="btn btn-sm btn-outline" id="flipMirrorBtn" title="Flip Mirror View">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20"></path>
+                <path d="M4 12H2"></path>
+                <path d="M10 12H8"></path>
+                <path d="M16 12h-2"></path>
+                <path d="M22 12h-2"></path>
+              </svg>
+              Mirror
+            </button>
+          </div>
+
+          <div class="toolbar-right">
+            <label class="btn btn-sm btn-secondary upload-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              Scan Photo
+              <input type="file" id="scanPhotoInput" accept="image/*" style="display:none;">
+            </label>
+            <button class="btn btn-sm btn-accent" id="snapshotCheckinBtn" title="Instant Manual Capture">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              Snapshot
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Demo Profiles Section -->
+        <div class="quick-demo-tray">
+          <span class="tray-label">Quick Test Registered Profiles:</span>
+          <div class="demo-buttons" id="demoButtons">
+            <!-- Injected dynamically for Ipsita, Kanishka, Senna, Tanvi -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Attendance Records Table Section -->
+      <section class="card records-section">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Live Attendance Logs</h2>
+            <p class="card-subtitle">Verified biometric check-ins and timestamps</p>
+          </div>
+          <div class="header-button-group">
+            <button class="btn btn-sm btn-success" id="exportCsvBtn" title="Export records to CSV">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Export CSV
+            </button>
+            <button class="btn btn-sm btn-ghost text-danger" id="clearLogsBtn" title="Clear attendance logs">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Filters -->
+        <div class="table-filters">
+          <div class="search-input-wrapper">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchFilter" placeholder="Search by personnel name..." autocomplete="off">
+          </div>
+          <div class="filter-controls">
+            <select id="dateFilter">
+              <option value="today">Today</option>
+              <option value="all">All Dates</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Attendance Logs Table -->
+        <div class="table-container">
+          <table class="attendance-table" id="attendanceTable">
+            <thead>
+              <tr>
+                <th>Personnel</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+
+          <div class="empty-state" id="emptyTableState">
+            <div class="empty-icon">📝</div>
+            <h4>No Attendance Records Yet</h4>
+            <p>Point the camera at a registered face or click "Start Camera" to log attendance.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Registered Personnel Directory Section -->
+    <section class="card personnel-directory-card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Registered Personnel Database</h2>
+          <p class="card-subtitle">Active face descriptor embeddings & authorized credentials</p>
+        </div>
+        <button class="btn btn-sm btn-primary" id="openRegisterModalBtn2">
+          + Add New Member
+        </button>
+      </div>
+
+      <div class="personnel-grid" id="personnelGrid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>VisionAttend AI System &bull; Real-time Edge Facial Recognition & Biometric Attendance</p>
+      <div class="footer-links">
+        <a href="https://github.com/ipsita060/faceattendance" target="_blank" rel="noopener">GitHub Repository</a>
+        <span>&bull;</span>
+        <a href="attendance.csv" download>attendance.csv</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Register New Person Modal Dialog -->
+  <dialog id="registerModal" class="modal-dialog" closedby="any">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+          </div>
+          <div>
+            <h3>Register New Member</h3>
+            <p>Enroll a new face into the biometric database</p>
+          </div>
+        </div>
+        <button class="btn-close" id="closeRegisterModalBtn" aria-label="Close modal">&times;</button>
+      </div>
+
+      <form id="registerForm" class="modal-body" method="dialog">
+        <div class="form-group">
+          <label for="newMemberName">Full Name <span class="text-danger">*</span></label>
+          <input type="text" id="newMemberName" required placeholder="e.g. Alexander Pierce" autocomplete="name">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="newMemberRole">Role / Title</label>
+            <input type="text" id="newMemberRole" placeholder="e.g. Student / Engineer" value="Member">
+          </div>
+          <div class="form-group">
+            <label for="newMemberId">Personnel ID</label>
+            <input type="text" id="newMemberId" placeholder="e.g. ID-2026-08">
+          </div>
+        </div>
+
+        <div class="photo-enroll-section">
+          <label class="form-label">Face Portrait Photo <span class="text-danger">*</span></label>
+          <div class="enroll-preview-box" id="enrollPreviewBox">
+            <img id="enrollImgPreview" src="" alt="Enrolled portrait preview" style="display:none;">
+            <video id="enrollWebcamVideo" autoplay muted playsinline style="display:none;"></video>
+            <div class="enroll-empty-placeholder" id="enrollPlaceholder">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>
+              </svg>
+              <p>No portrait selected yet</p>
+            </div>
+          </div>
+
+          <div class="enroll-actions">
+            <button type="button" class="btn btn-sm btn-outline" id="startEnrollCamBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19 4v16H5V4h14m0-2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"></path>
+              </svg>
+              Use Live Camera
+            </button>
+            <button type="button" class="btn btn-sm btn-accent" id="captureEnrollSnapshotBtn" style="display:none;">
+              Capture Shot
+            </button>
+            <label class="btn btn-sm btn-secondary upload-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Upload Photo
+              <input type="file" id="enrollFileInput" accept="image/*" style="display:none;">
+            </label>
+          </div>
+          <span class="input-hint">For best accuracy, ensure bright lighting and clear frontal face.</span>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="cancelRegisterModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveMemberBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Save & Enroll Face
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Preloaded Data & Face Recognition Scripts -->
+  <script src="registered_faces.js"></script>
+  <!-- Load face-api.js bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
